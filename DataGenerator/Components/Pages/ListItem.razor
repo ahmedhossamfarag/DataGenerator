@@ -1,0 +1,16 @@
+﻿<div class="border border-1 p-1 h-fit">
+	<label>@Option</label>
+	<i class="cur-pntr text-danger ms-1" @onclick="Remove">🗙</i>
+</div>
+
+@code {
+	[Parameter]
+	public string Option { get; set; } = string.Empty;
+
+	[Parameter]
+	public Components.Pages.FListField? FList { get; set; }
+	private void Remove(MouseEventArgs e)
+	{
+		FList?.RemoveOption(Option);
+	}
+}

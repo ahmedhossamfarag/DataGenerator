@@ -1,0 +1,104 @@
+﻿<div @ref="reference" class="d-flex justify-content-between m-3 border border-1 w-fit minw-100 @(fly? "fly":"")" style="@(fly ? $"transform: translateY({ytransf}px) translateZ(1000px);" :"")">
+	<div class="d-flex">
+		<div class="p-2 cur-move" @onmousedown="StartMove" @onmouseup="EndMove" @onmouseleave="EndMove" @onmousemove="Move">
+			<i class="bi bi-arrows-move fs-3"></i> 
+		</div>
+		<div id="fields-container" class="d-flex flex-lg-row flex-column gap-lg-3 gap-1 p-2">
+			<div class="col-12">
+				<div class="input-group">
+					<InputSelect TValue="FieldType" class="form-control form-select" @bind-Value="Field.Type">
+						<optgroup label="Primary">
+							@for (var t = FieldType.Primary + 1; t < FieldType.PrimaryEnd; t++)
+							{
+								<option>@t</option>
+							}
+						</optgroup>
+						<optgroup label="PreDefined">
+							@for (var t = FieldType.List + 1; t < FieldType.ListEnd; t++)
+							{
+								<option>@t</option>
+							}
+						</optgroup>
+					</InputSelect>
+				</div>
+			</div>
+			<div class="col-12">
+				<div class="input-group">
+					<InputText class="form-control" placeholder="Name" @bind-Value="@Field.Name" />
+				</div>
+			</div>
+			@switch (Field.Type)
+			{
+				case FieldType.Text:
+					<TextField Parent="Field" />
+					break;
+				case FieldType.Number:
+					<NumField Parent="Field" />
+					break;
+				case FieldType.Decimel:
+					<DecField Parent="Field" />
+					break;
+				case FieldType.FromList:
+					<FListField Parent="Field" />
+					break;
+				case FieldType.Boolean:
+					Field.Field = new BoolField();
+					break;
+				case FieldType.Name:
+					Field.Field = new Data.FListField() { Options = DataSource.Names ?? [] };
+					break;
+				case FieldType.Country:
+					Field.Field = new Data.FListField() { Options = DataSource.Countries?.Keys.ToList() ?? [] };
+					break;
+				case FieldType.City:
+					<CityField Parent="Field" DataSource="DataSource" />
+					break;
+			}
+		</div>
+	</div>
+	<div>
+		<button class="btn btn-outline-danger border-0 rounded-0" @onclick="Delete">🗙</button>
+	</div>
+</div>
+
+@code {
+	private ElementReference reference;
+	private bool fly = false;
+	private double ytransf = 0;
+
+	[Parameter]
+	public Data.DataField Field { get; set; } = new();
+
+	[Parameter]
+	public Data.DataSource DataSource { get; set; } = new();
+
+	[Parameter]
+	public Action<Data.DataField>? Remove { get; set; }
+
+	[Parameter]
+	public Action<Data.DataField, ElementReference, double>? MoveField { get; set; }
+
+	//public FieldType[] Types { get => System.Enum.GetValues(typeof(FieldType)).Cast<FieldType>().ToArray(); }
+
+	private void Delete(MouseEventArgs e)
+	{
+		Remove?.Invoke(Field);
+	}
+
+	private void StartMove(MouseEventArgs e)
+	{
+		fly = true;
+	}
+	private void EndMove(MouseEventArgs e)
+	{
+		fly = false;
+		if(ytransf != 0)
+			MoveField?.Invoke(Field, reference, ytransf);
+		ytransf = 0;
+	}
+	private void Move(MouseEventArgs e)
+	{
+		if(fly)
+			ytransf += e.MovementY;
+	}
+}

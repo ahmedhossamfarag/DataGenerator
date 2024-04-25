@@ -1,0 +1,36 @@
+﻿<div class="col-12">
+	<div class="input-group">
+		<div class="input-group-text">Country</div>
+		<InputSelect TValue="string" class="form-control form-select" @bind-Value="Field.Country">
+			<option>All</option>
+			@foreach (var c in countries)
+			{
+				<option>@c</option>
+			}
+		</InputSelect>
+	</div>
+</div>
+
+
+@code {
+	private Data.CityField Field = new();
+
+	[Parameter]
+	public Data.DataField Parent { get; set; } = new();
+
+	[Parameter]
+	public Data.DataSource DataSource { get; set; } = new();
+
+
+	private List<string> countries = [];
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		Parent.Field = Field;
+		if(DataSource.Countries != null)
+		{
+			countries = DataSource.Countries.Keys.ToList();
+		}
+	}
+}

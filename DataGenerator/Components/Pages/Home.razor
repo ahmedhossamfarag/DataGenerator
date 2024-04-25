@@ -1,0 +1,98 @@
+﻿@page "/"
+@using System.Text
+@rendermode InteractiveServer
+@inject Data.DataSource DataSource
+@inject IJSRuntime JS
+
+<PageTitle>Generate Data</PageTitle>
+
+<div class="vh-100">
+	<div class="h-75 d-flex flex-column overflow-scroll">
+		<div class="mt-5">
+			<div class="w-fit">
+				<div @ref="FieldsContainer">
+					@foreach (var f in data.Fields)
+					{
+						<DataField Field="f" DataSource="DataSource" Remove="RemoveField" MoveField="MoveField" />
+					}
+				</div>
+			</div>
+			<div>
+				<button class="btn btn-light m-3" @onclick="AddField">Add Field</button>
+			</div>
+		</div>
+	</div>
+	<div class="bg-black text-white">
+		<div class="d-flex flex-row-reverse">
+			<h3 class="bi bi-arrow-counterclockwise cur-pntr" @onclick="ViewData"></h3>
+		</div>
+		<div class="json">
+			@json
+		</div>
+		<div class="d-flex flex-row-reverse">
+			<Generator Data="data" DataSource="DataSource" />
+		</div>
+	</div>
+</div>
+
+<script>
+	window.ComputeIndex = async (container, child, offset) => {
+		var i = 0;
+		var y = child.offsetTop + offset;
+		for (var c of container.children) {
+			if (c.offsetTop < y)
+				i++;
+			else
+				break;
+		}
+		return i;
+	}
+</script>
+
+@code {
+	private ElementReference FieldsContainer;
+
+	private DataObject data = new();
+
+	private string json = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await DataSource.InitializeAsync();
+	}
+
+	private void AddField()
+	{
+		data.Fields.Add(new());
+	}
+
+	public void RemoveField(Data.DataField field)
+	{
+		data.Fields.Remove(field);
+		StateHasChanged();
+	}
+
+	public async void MoveField(Data.DataField field, ElementReference reference, double dis)
+	{
+		var i = await JS.InvokeAsync<int>("ComputeIndex", FieldsContainer, reference, dis);
+		Console.WriteLine(i);
+		if (dis > 0)
+			i--;
+		if(i > -1)
+		{
+			data.Fields.Remove(field);
+			data.Fields.Insert(i, field);
+			StateHasChanged();
+		}
+	}
+
+	private void ViewData()
+	{
+		StringBuilder builder = new();
+		Random random = new();
+		data.Generate(builder, random, DataSource);
+		json = builder.ToString();
+	}
+
+
+}

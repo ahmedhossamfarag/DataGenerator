@@ -1,0 +1,44 @@
+﻿<div class="d-flex flex-wrap gap-1 justify-content-center p-1 border border-1">
+	@foreach(var op in Field.Options)
+	{
+		<ListItem Option="@op" FList="this" />
+	}
+</div>
+<div class="col-12">
+	<div class="input-group">
+		<input type="text" class="form-control" placeholder="New Option" @bind="@newOption" @bind:event="oninput" @onkeydown="Insert" />
+	</div>
+	<div class="valid-feedback d-block">
+		Press Enter To Add
+	</div>
+</div>
+
+@code {
+	private Data.FListField Field = new();
+
+	private string newOption = string.Empty;
+
+	[Parameter]
+	public Data.DataField Parent { get; set; } = new();
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		Parent.Field = Field;
+	}
+
+	public void RemoveOption(string option)
+	{
+		Field.Options.Remove(option);
+		StateHasChanged();
+	}
+	private void Insert(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter")
+		{
+			if(!Field.Options.Contains(newOption))
+				Field.Options.Add(newOption);
+			newOption = string.Empty;
+		}
+	}
+}

@@ -1,0 +1,25 @@
+﻿<div class="col-12">
+	<div class="input-group">
+		<div class="input-group-text">Min-Length</div>
+		<InputNumber TValue="int" min="0" max="@(Field.Max)" class="form-control" @bind-Value="@Field.Min" />
+	</div>
+</div>
+<div class="col-12">
+	<div class="input-group">
+		<div class="input-group-text">Max-Length</div>
+		<InputNumber TValue="int" class="form-control" min="@(Field.Min)" @bind-Value="@Field.Max" />
+	</div>
+</div>
+
+@code {
+	private Data.TextField Field = new();
+
+	[Parameter]
+	public Data.DataField Parent { get; set; } = new();
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		Parent.Field = Field;
+	}
+}

@@ -1,0 +1,76 @@
+﻿@using System.Text
+@inject IJSRuntime JS
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateModal">
+	Generate
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="generateModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="generateModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5 text-black" id="generateModalLabel">Generate Json File</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="col-12">
+					<div class="input-group">
+						<div class="input-group-text">Number of objects</div>
+						<input type="number" min="0" class="form-control" placeholder="No Of Objs" @bind="noObjs" @bind:event="oninput" />
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary @(noObjs > 0 ? "":"disabled")" @onclick="GenerateData">Generate</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!--https://learn.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-8.0-->
+<script>
+	window.downloadFileFromStream = async (fileName, contentStreamReference) => {
+		const arrayBuffer = await contentStreamReference.arrayBuffer();
+		const blob = new Blob([arrayBuffer]);
+		const url = URL.createObjectURL(blob);
+		const anchorElement = document.createElement('a');
+		anchorElement.href = url;
+		anchorElement.download = fileName ?? '';
+		anchorElement.click();
+		anchorElement.remove();
+		URL.revokeObjectURL(url);
+	}
+</script>
+@code {
+	[Parameter]
+	public DataObject Data { get; set; } = new();
+
+	[Parameter]
+	public DataSource DataSource { get; set; } = new();
+
+	private int noObjs = 10;
+
+	private async void GenerateData()
+	{
+		if (noObjs <= 0) return;
+
+		StringBuilder builder = new();
+		Random random = new();
+		builder.AppendLine("[");
+		for (var i = 0; i < noObjs; i++)
+		{
+			Data.Generate(builder, random, DataSource);
+			builder.AppendLine(i == noObjs - 1 ? "" : ",");
+		}
+		builder.AppendLine("]");
+
+		var fileStream = new MemoryStream(Encoding.UTF8.GetBytes(builder.ToString()));
+		var fileName = "data.json";
+
+		using var streamRef = new DotNetStreamReference(fileStream);
+
+		await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+	}
+}
